@@ -12,7 +12,7 @@ SSL Cipher Enum Tool is a PHP script designed to help in the enumeration of SSL 
 - Obtain server headers.
 
 ## Requirements
-- PHP 7.4 or higher.
+- PHP 8.0 or higher.
 - Curl module for PHP.
 - Permission to execute external commands from PHP if required.
 

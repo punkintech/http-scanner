@@ -1,26 +1,74 @@
 <?php
+/**
+ * SSL Cipher Enum Tool
+ *
+ * This script is designed to enumerate SSL/TLS ciphers for a given domain or IP and port.
+ * It provides detailed information about DNS records, checks for HTTP to HTTPS redirects,
+ * tests for HSTS (HTTP Strict Transport Security), SSL/TLS versions, server headers, and
+ * cipher suites.
+ *
+ * PHP version 8.0+
+ *
+ * @package    SSLCipherEnumTool
+ * @author     kaitoj
+ * @license    MIT License
+ * @version    1.0
+ * @link       https://github.com/punkintech/ssl-cipher-enum-tool
+ *
+ * MIT License
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ * DISCLAIMER: This tool is for educational and testing purposes only. The author
+ * or contributors are not responsible for any misuse or damage caused by this tool.
+ */
+
 const SINGLE = PHP_EOL;
 const DOUBLE = SINGLE.SINGLE;
 const HTTP = "http://";
 const HTTPS = "https://";
 const TLS = "tls://";
 
-// Prompt user for input
+/** Prompt for user input
+ * $domain can be a host or IP, do not include HTTP(s)
+ * $port must be an int or blank for default 443
+ */
 echo SINGLE;
 $domain = trim(readline('Enter the hostname or IP address of the server: '));
 $port = trim(readline('Enter the port number of the server (press Enter for default - 443): '));
-
-// Use default port (443) if user leaves it blank
 $port = (empty($port)) ? 443 : $port;
 
+/**
+ * Validate the host / IP
+ */
 $ip = validateHostorIP($domain);
 
-// We will loop over the DNS record types because sometimes they don't work correctly
+/**
+ * Get DNS records
+ */
 $dnsRecords = getDnsRecords($domain);
 
 echo SINGLE.getBgColour('blue')."Testing {$domain} ($ip) on port {$port}...".getBgColour().DOUBLE;
 
-// Get DNS records
+/**
+ * Process DNS records
+ */
 echo getTitle('dns');
 $validDomain = false;
 foreach($dnsRecords as $key => $record) {
@@ -44,7 +92,9 @@ foreach($dnsRecords as $key => $record) {
     }
 }
 
-// Lets check for HTTP -> HTTPS redirection
+/**
+ * Check for HTTP/S redirection and HSTS
+ */
 echo getTitle('redirection');
 
 $curlDomain = (!$validDomain)? $ip : $domain;
@@ -93,7 +143,9 @@ if (in_array($statusCode, [301, 302])) {
 
 curl_close($ch);
 
-// Lets get the headers
+/**
+ * Get headers
+ */
 echo getTitle('header');
 $error = false;
 $curlDomain = (!$validDomain)? $ip : $domain;
@@ -125,7 +177,7 @@ if (!$error) {
             $lines[] = explode(":", $header);
         }
     }
-    //var_dump($headers);
+
     foreach ($lines as $line) {
         $resp = '';
         if (str_contains($line[0], "HTTP")) {
@@ -203,7 +255,9 @@ if (!$error) {
 }
 curl_close($ch);
 
-// Get Ciphers
+/**
+ * Get supported ciphers
+ */
 echo getTitle('ssl');
 $suites = getCipherSuites();
 $sslVersions = getSslVersions();
@@ -243,7 +297,9 @@ if (empty($sslVersions)) {
     exit;
 }
 
-// Test Ciphers
+/**
+ * Test supported ciphers
+ */
 echo getTitle('ciphers');
 
 foreach ($sslVersions as $sslVersion) {
