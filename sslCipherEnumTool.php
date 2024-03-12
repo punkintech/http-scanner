@@ -12,7 +12,7 @@
  * @package    SSLCipherEnumTool
  * @author     kaitoj
  * @license    MIT License
- * @version    1.0
+ * @version    0.0.0-alpha.1
  * @link       https://github.com/punkintech/ssl-cipher-enum-tool
  *
  * MIT License
@@ -254,6 +254,26 @@ if (!$error) {
     echo "skipping headers".SINGLE;
 }
 curl_close($ch);
+/**
+ * Get Certificate chain
+ */
+echo getTitle('sslChain');
+$context = getSslStreamContext("TLSv1_2"); // should work most of the time
+$socket = getSslSocket($ip, $port, $context);
+$certificates = getSslCertificates($socket);
+
+foreach ($certificates as $cert) {
+    $certInfo = openssl_x509_parse($cert);
+
+    echo "[{$certInfo['subject']['CN']}][{$certInfo['issuer']['O']}]".SINGLE;
+
+    $validTo = new DateTime();
+    $validTo->setTimestamp($certInfo['validTo_time_t']);
+    $date = $validTo->format("Y-m-d");
+    echo "      ".getResponse(sslValidityStatus($certInfo['validTo_time_t']), $date);
+    echo "      ".getResponse(sslSignatureStatus($certInfo['signatureTypeSN']), $certInfo['signatureTypeSN']);
+
+}
 
 /**
  * Get supported ciphers
@@ -451,7 +471,8 @@ function getTitle(string $title): string
         'redirection' => SINGLE.getBgColour('yellow')."Testing For HTTP -> HTTPS redirection ...".getBgColour().DOUBLE,
         'header' => SINGLE.getBgColour('yellow')."Testing For HTTP(S) headers ...".getBgColour().DOUBLE,
         'ssl' => SINGLE.getBgColour('yellow')."Testing for SSL/TLS support...".getBgColour().DOUBLE,
-        'ciphers' => SINGLE.getBgColour('yellow')."Testing Cipher Suites ...".getBgColour().DOUBLE
+        'ciphers' => SINGLE.getBgColour('yellow')."Testing Cipher Suites ...".getBgColour().DOUBLE,
+        'sslChain' => SINGLE.getBgColour('yellow')."Testing SSL Certificate Chain ...".getBgColour().DOUBLE
     ];
 
     return $titles[$title];
@@ -501,6 +522,22 @@ function getTextColour(?string $colour = null): string
 function getSslCipherSuites(): array
 {
     return explode(":", shell_exec("openssl ciphers"));
+}
+
+/**
+ * @param $socket
+ * @return array
+ */
+function getSslCertificates($socket): array
+{
+    $contParams = stream_context_get_params($socket);
+
+    if (!empty($contParams['options']['ssl']['peer_certificate_chain'])) {
+        return $contParams['options']['ssl']['peer_certificate_chain'];
+    } else {
+        echo getResponse("info", "Certificate chain not found");
+    }
+    return [];
 }
 
 /**
@@ -566,6 +603,7 @@ function getSslStreamContext(string $sslVersion, $cipherSuite = null)
 {
     $context = [
         'ssl' => [
+            'capture_peer_cert_chain' => true,
             'crypto_method' => constant("STREAM_CRYPTO_METHOD_{$sslVersion}_CLIENT"),
             'verify_peer' => false,
             'verify_peer_name' => false
@@ -609,4 +647,22 @@ function isJwt(string $string): bool
     $parsed = base64_decode(urldecode($string));
     // test if is a json. if json, then probably a jwt
     return (is_object(json_decode($parsed)));
+}
+
+/**
+ * @param int $timestamp
+ * @return string
+ */
+function sslValidityStatus(int $timestamp = 0): string
+{
+    return ($timestamp > time()) ? 'secure' : 'weak';
+}
+
+/**
+ * @param string $signature
+ * @return string
+ */
+function sslSignatureStatus(string $signature): string
+{
+    return 'info';
 }
