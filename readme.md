@@ -1,7 +1,7 @@
 # SSL Cipher Enum Tool
 
 ## Introduction
-SSL Cipher Enum Tool is a PHP script designed to help in the enumeration of SSL ciphers for a given domain or IP address and port. Created by Kaito Jacobson, this tool provides a comprehensive overview of the security configurations of web servers, focusing on SSL/TLS protocols, cipher suites, DNS records, server headers, and the presence of security features like HTTP to HTTPS redirects and HSTS (HTTP Strict Transport Security).
+SSL Cipher Enum Tool is a PHP script designed to help in the enumeration of SSL ciphers for a given domain or IP address and port. Created by kaitoj, this tool provides a comprehensive overview of the security configurations of web servers, focusing on SSL/TLS protocols, cipher suites, DNS records, server headers, and the presence of security features like HTTP to HTTPS redirects and HSTS (HTTP Strict Transport Security).
 
 ## Features
 - Enumerate SSL/TLS cipher suites.
