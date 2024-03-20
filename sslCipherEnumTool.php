@@ -45,6 +45,9 @@ const HTTP = "http://";
 const HTTPS = "https://";
 const TLS = "tls://";
 
+/** Check dependencies before continuing */
+checkDependencies();
+
 /** Prompt for user input
  * $domain can be a host or IP, do not include HTTP(s)
  * $port must be an int or blank for default 443
@@ -272,7 +275,6 @@ foreach ($certificates as $cert) {
     $date = $validTo->format("Y-m-d");
     echo "      ".getResponse(sslValidityStatus($certInfo['validTo_time_t']), $date);
     echo "      ".getResponse(sslSignatureStatus($certInfo['signatureTypeSN']), $certInfo['signatureTypeSN']);
-
 }
 
 /**
@@ -665,4 +667,17 @@ function sslValidityStatus(int $timestamp = 0): string
 function sslSignatureStatus(string $signature): string
 {
     return 'info';
+}
+
+/**
+ * @return void
+ */
+function checkDependencies(): void
+{
+    if (!version_compare(PHP_VERSION, '8.0', '>=')) {
+        die ('PHP version 8.0 or greater is required');
+    }
+    if (!function_exists('curl_init')) {
+        die ("Curl not installed. Install php-curl to continue.");
+    }
 }
