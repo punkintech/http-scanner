@@ -34,7 +34,15 @@ php sslCipherEnumTool.php
 Enter the hostname or IP address of the server: example.com
 Enter the port number of the server (press Enter for default - 443): 
 ```
+or you can write the commands on a single line as below;
+```bash
+php sslCipherEnumTool.php [-h www.example.com] [-p 443] [-o path/to/file.txt]
+```
+-p = port
+-h = hostname
+-o = output file
 
+If either the -h or -p parameters are missing you will be prompted to enter those details.
 ## Acknowledgments
 
 @kaitoj, for developing the SSL Cipher Enum Tool.

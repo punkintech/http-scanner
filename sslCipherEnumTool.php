@@ -53,9 +53,24 @@ checkDependencies();
  * $port must be an int or blank for default 443
  */
 echo SINGLE;
-$domain = trim(readline('Enter the hostname or IP address of the server: '));
-$port = trim(readline('Enter the port number of the server (press Enter for default - 443): '));
-$port = (empty($port)) ? 443 : $port;
+if(!hasParameters()) {
+    $result = prompt();
+    $domain = $result['domain'];
+    $port = $result['port'];
+}
+
+if (hasParameters()) {
+    $domain = getDomainParameter();
+    $port = getPortParameter();
+
+    if (!$domain) {
+        $result = prompt();
+        $domain = $result['domain'];
+        $port = $result['port'];
+    }
+
+    $output = getOutputParameter();
+}
 
 /**
  * Validate the host / IP
@@ -680,4 +695,77 @@ function checkDependencies(): void
     if (!function_exists('curl_init')) {
         die ("Curl not installed. Install php-curl to continue.");
     }
+}
+
+/**
+ * @return bool
+ */
+function hasParameters(): bool
+{
+    if ($_SERVER['argc'] > 1) {
+        if (array_search('-h', $_SERVER['argv'])) {
+            return true;
+        }
+        if (array_search('-p', $_SERVER['argv'])) {
+            return true;
+        }
+        if (array_search('-o', $_SERVER['argv'])) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * @return string|null
+ */
+function getDomainParameter(): ?string
+{
+    return (
+        !empty($_SERVER['argv'][array_search('-h', $_SERVER['argv']) +1]) &&
+        (
+            $_SERVER['argv'][array_search('-h', $_SERVER['argv']) +1] != "-p" &&
+            $_SERVER['argv'][array_search('-h', $_SERVER['argv']) +1] != "-o"
+        )
+    ) ? $_SERVER['argv'][array_search('-h', $_SERVER['argv']) +1] : null;
+}
+
+/**
+ * @return int
+ */
+function getPortParameter(): int
+{
+    return (
+        !empty($_SERVER['argv'][array_search('-p', $_SERVER['argv']) +1]) &&
+        (
+            $_SERVER['argv'][array_search('-p', $_SERVER['argv']) +1] != "-h" &&
+            $_SERVER['argv'][array_search('-p', $_SERVER['argv']) +1] != "-o"
+        )
+    ) ? $_SERVER['argv'][array_search('-p', $_SERVER['argv']) +1] : 443;
+}
+
+/**
+ * @return string|null
+ */
+function getOutputParameter(): ?string
+{
+    return (
+        !empty($_SERVER['argv'][array_search('-o', $_SERVER['argv']) +1]) &&
+        (
+            $_SERVER['argv'][array_search('-o', $_SERVER['argv']) +1] != "-h" &&
+            $_SERVER['argv'][array_search('-o', $_SERVER['argv']) +1] != "-p"
+        )
+    ) ? $_SERVER['argv'][array_search('-o', $_SERVER['argv']) +1] : null;
+}
+
+/**
+ * @return array
+ */
+function prompt(): array
+{
+    $return['domain'] = trim(readline('Enter the hostname or IP address of the server: '));
+    $return['port'] = trim(readline('Enter the port number of the server (press Enter for default - 443): '));
+    $return['port'] = (empty($return['port'])) ? 443 : $return['port'];
+
+    return $return;
 }
